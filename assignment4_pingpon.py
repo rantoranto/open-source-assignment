@@ -3,138 +3,136 @@ from pygame.locals import *
 
 pygame.init()
 pygame.display.set_caption("20256562 김권택")
-screen = pygame.display.set_mode((1000, 600))
-clock = pygame.time.Clock()
-ball_sprite = pygame.image.load("C:/Users/ball.png").convert_alpha()
-ball_sprite = pygame.transform.scale(ball_sprite, (45, 45))
+s = pygame.display.set_mode((1000, 600))
+c = pygame.time.Clock()
+b = pygame.image.load("C:/Users/ball.png").convert_alpha()
+b = pygame.transform.scale(b, (45, 45))
 
-right_score = 0
-left_score = 0
-main_font = pygame.font.Font(None, 40)
-title_font = pygame.font.SysFont("corbel", 70)
-score_font = pygame.font.Font(None, 60)
-start_time = time.time()
+rs = 0
+ls = 0
+f1 = pygame.font.Font(None, 40)
+f2 = pygame.font.SysFont("corbel", 70)
+f3 = pygame.font.Font(None, 60)
+t0 = time.time()
 
-class Paddle:
-    def __init__(self, keys, x_pos, direction):
-        self.keys = keys
-        self.x = x_pos
+class P:
+    def __init__(self, k, x, d):
+        self.k = k
+        self.x = x
         self.y = 260
-        self.direction = direction
-        self.last_smash = 0
+        self.d = d
+        self.t = 0
 
-    def update(self):
-        if pressed_keys[self.keys[0]] and self.y > 0:
+    def u(self):
+        if k[self.k[0]] and self.y > 0:
             self.y -= 10
-        if pressed_keys[self.keys[1]] and self.y < 520:
+        if k[self.k[1]] and self.y < 520:
             self.y += 10
 
-    def render(self):
-        offset = -self.direction * (time.time() < self.last_smash + 0.5) * 10
-        pygame.draw.line(screen, (255, 255, 255), (self.x, self.y), (self.x + offset, self.y + 80), 6)
+    def r(self):
+        o = -self.d * (time.time() < self.t + 0.5) * 10
+        pygame.draw.line(s, (255, 255, 255), (self.x, self.y), (self.x + o, self.y + 80), 6)
 
-    def smash(self):
-        if time.time() > self.last_smash + 0.3:
-            self.last_smash = time.time()
+    def sm(self):
+        if time.time() > self.t + 0.3:
+            self.t = time.time()
 
-class GameBall:
+class GB:
     def __init__(self):
-        self.angle = (math.pi / 3) * random.random() + (math.pi / 3) + math.pi * random.randint(0, 1)
-        self.speed = 12
-        self.vx = math.sin(self.angle) * self.speed
-        self.vy = math.cos(self.angle) * self.speed
+        self.a = (math.pi / 3) * random.random() + (math.pi / 3) + math.pi * random.randint(0, 1)
+        self.v = 12
+        self.vx = math.sin(self.a) * self.v
+        self.vy = math.cos(self.a) * self.v
         self.x = 475
         self.y = 275
 
-    def update(self):
+    def u(self):
         self.x += self.vx
         self.y += self.vy
 
-    def render(self):
-        screen.blit(ball_sprite, (int(self.x), int(self.y)))
+    def r(self):
+        s.blit(b, (int(self.x), int(self.y)))
 
-    def check_collision(self):
+    def col(self):
         if (self.y <= 0 and self.vy < 0) or (self.y >= 550 and self.vy > 0):
             self.vy *= -1
-            self.angle = math.atan2(self.vx, self.vy)
+            self.a = math.atan2(self.vx, self.vy)
 
-        for paddle in paddles:
-            if pygame.Rect(paddle.x, paddle.y, 6, 80).colliderect(self.x, self.y, 50, 50) and abs(self.vx) / self.vx == paddle.direction:
-                self.angle += random.random() * math.pi / 4 - math.pi / 8
+        for p in ps:
+            if pygame.Rect(p.x, p.y, 6, 80).colliderect(self.x, self.y, 50, 50) and abs(self.vx) / self.vx == p.d:
+                self.a += random.random() * math.pi / 4 - math.pi / 8
+                if (0 < self.a < math.pi / 6) or (math.pi * 5 / 6 < self.a < math.pi):
+                    self.a = (math.pi / 3) * random.random() + (math.pi / 3)
+                elif (math.pi < self.a < math.pi * 7 / 6) or (math.pi * 11 / 6 < self.a < math.pi * 2):
+                    self.a = (math.pi / 3) * random.random() + (math.pi / 3) + math.pi
 
-                if (0 < self.angle < math.pi / 6) or (math.pi * 5 / 6 < self.angle < math.pi):
-                    self.angle = ((math.pi / 3) * random.random() + (math.pi / 3))
-                elif (math.pi < self.angle < math.pi * 7 / 6) or (math.pi * 11 / 6 < self.angle < math.pi * 2):
-                    self.angle = ((math.pi / 3) * random.random() + (math.pi / 3)) + math.pi
+                self.a *= -1
+                self.a %= math.pi * 2
 
-                self.angle *= -1
-                self.angle %= math.pi * 2
+                if time.time() < p.t + 0.05 and self.v < 20:
+                    self.v *= 1.5
 
-                if time.time() < paddle.last_smash + 0.05 and self.speed < 20:
-                    self.speed *= 1.5
+                self.vx = math.sin(self.a) * self.v
+                self.vy = math.cos(self.a) * self.v
 
-                self.vx = math.sin(self.angle) * self.speed
-                self.vy = math.cos(self.angle) * self.speed
-
-game_ball = GameBall()
-paddles = [Paddle([K_a, K_z], 10, -1), Paddle([K_UP, K_DOWN], 984, 1)]
+g = GB()
+ps = [P([K_a, K_z], 10, -1), P([K_UP, K_DOWN], 984, 1)]
 
 while True:
-    clock.tick(30)
-    for event in pygame.event.get():
-        if event.type == QUIT:
+    c.tick(30)
+    for e in pygame.event.get():
+        if e.type == QUIT:
             sys.exit()
-        if event.type == KEYDOWN:
-            if event.key == K_q:
-                paddles[0].smash()
-            if event.key == K_RSHIFT:
-                paddles[1].smash()
+        if e.type == KEYDOWN:
+            if e.key == K_q:
+                ps[0].sm()
+            if e.key == K_RSHIFT:
+                ps[1].sm()
 
-    pressed_keys = pygame.key.get_pressed()
+    k = pygame.key.get_pressed()
+    s.fill((0, 0, 0))
 
-    screen.fill((0, 0, 0))
+    pygame.draw.line(s, (255, 255, 255), (s.get_width() / 2, 0), (s.get_width() / 2, s.get_height()), 3)
+    pygame.draw.circle(s, (255, 255, 255), (int(s.get_width() / 2), int(s.get_height() / 2)), 50, 3)
 
-    pygame.draw.line(screen, (255, 255, 255), (screen.get_width() / 2, 0), (screen.get_width() / 2, screen.get_height()), 3)
-    pygame.draw.circle(screen, (255, 255, 255), (int(screen.get_width() / 2), int(screen.get_height() / 2)), 50, 3)
+    t = f1.render(str(int(60 - (time.time() - t0))), True, (255, 255, 255))
+    s.blit(t, (s.get_width() / 2 - t.get_width() / 2, 20))
 
-    timer_text = main_font.render(str(int(60 - (time.time() - start_time))), True, (255, 255, 255))
-    screen.blit(timer_text, (screen.get_width() / 2 - timer_text.get_width() / 2, 20))
+    for p in ps:
+        p.u()
+        p.r()
 
-    for paddle in paddles:
-        paddle.update()
-        paddle.render()
+    if g.x < -50:
+        g = GB()
+        rs += 1
 
-    if game_ball.x < -50:
-        game_ball = GameBall()
-        right_score += 1
+    if g.x > 1000:
+        g = GB()
+        ls += 1
 
-    if game_ball.x > 1000:
-        game_ball = GameBall()
-        left_score += 1
+    g.u()
+    g.r()
+    g.col()
 
-    game_ball.update()
-    game_ball.render()
-    game_ball.check_collision()
+    st1 = f1.render(str(ls), True, (255, 255, 255))
+    s.blit(st1, (20, 20))
+    st2 = f1.render(str(rs), True, (255, 255, 255))
+    s.blit(st2, (980 - st2.get_width(), 20))
 
-    score_text_left = main_font.render(str(left_score), True, (255, 255, 255))
-    screen.blit(score_text_left, (20, 20))
-    score_text_right = main_font.render(str(right_score), True, (255, 255, 255))
-    screen.blit(score_text_right, (980 - score_text_right.get_width(), 20))
+    if rs > 9 or ls > 9 or time.time() - t0 > 60:
+        ttl = f2.render("score", True, (255, 0, 255))
+        s.blit(ttl, (s.get_width() / 4 - ttl.get_width() / 2, s.get_height() / 4))
+        s.blit(ttl, (s.get_width() * 3 / 4 - ttl.get_width() / 2, s.get_height() / 4))
 
-    if right_score > 9 or left_score > 9 or time.time() - start_time > 60:
-        title = title_font.render("score", True, (255, 0, 255))
-        screen.blit(title, (screen.get_width() / 4 - title.get_width() / 2, screen.get_height() / 4))
-        screen.blit(title, (screen.get_width() * 3 / 4 - title.get_width() / 2, screen.get_height() / 4))
+        fsl = f3.render(str(ls), True, (255, 255, 255))
+        s.blit(fsl, (s.get_width() / 4 - fsl.get_width() / 2, s.get_height() / 2))
 
-        final_score_left = score_font.render(str(left_score), True, (255, 255, 255))
-        screen.blit(final_score_left, (screen.get_width() / 4 - final_score_left.get_width() / 2, screen.get_height() / 2))
-
-        final_score_right = score_font.render(str(right_score), True, (255, 255, 255))
-        screen.blit(final_score_right, (screen.get_width() * 3 / 4 - final_score_right.get_width() / 2, screen.get_height() / 2))
+        fsr = f3.render(str(rs), True, (255, 255, 255))
+        s.blit(fsr, (s.get_width() * 3 / 4 - fsr.get_width() / 2, s.get_height() / 2))
 
         while True:
-            for event in pygame.event.get():
-                if event.type == QUIT:
+            for e in pygame.event.get():
+                if e.type == QUIT:
                     sys.exit()
             pygame.display.update()
 
